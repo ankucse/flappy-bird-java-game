@@ -74,24 +74,24 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     double currentTurnScore = 0;
 
     // --- New Multiplayer and Rounds Variables ---
-    int numPlayers;
+    String[] playerNames;
     int numRounds;
-    int currentPlayer;
+    int currentPlayer; // 1-based index for the current player
     int currentRound;
     double[] totalScores; // Stores total score for each player across all rounds
     boolean allRoundsComplete = false;
 
     /**
      * Constructor for the FlappyBird game panel.
-     * Initializes the game based on the number of players and rounds.
+     * Initializes the game based on the player names and number of rounds.
      *
-     * @param numPlayers The number of players in the game.
-     * @param numRounds  The total number of rounds to be played.
+     * @param playerNames An array of strings containing the names of all players.
+     * @param numRounds   The total number of rounds to be played.
      */
-    FlappyBird(int numPlayers, int numRounds) {
-        this.numPlayers = numPlayers;
+    FlappyBird(String[] playerNames, int numRounds) {
+        this.playerNames = playerNames;
         this.numRounds = numRounds;
-        this.totalScores = new double[numPlayers];
+        this.totalScores = new double[playerNames.length];
         this.currentPlayer = 1;
         this.currentRound = 1;
 
@@ -150,23 +150,25 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
             drawFinalScores(g);
         } else if (gameOver) {
             // Message between turns
-            g.drawString("Player " + currentPlayer + " Score: " + (int) currentTurnScore, 10, 35);
+            g.drawString(playerNames[currentPlayer - 1] + "'s Score: " + (int) currentTurnScore, 10, 35);
             g.setFont(new Font("Arial", Font.BOLD, 28));
 
-            int nextPlayer = (currentPlayer % numPlayers) + 1;
-            int nextRound = currentRound + (currentPlayer / numPlayers);
+            String nextPlayerName = playerNames[currentPlayer % playerNames.length];
+            int nextRound = currentRound + (currentPlayer / playerNames.length);
 
-            g.drawString("Press SPACE for Player " + nextPlayer + "'s turn.", 20, boardHeight / 2);
+            g.drawString("Press SPACE for " + nextPlayerName + "'s turn.", 20, boardHeight / 2);
             g.drawString("(Round " + nextRound + "/" + numRounds + ")", 100, boardHeight / 2 + 40);
         } else if (!gameStarted) {
             // Initial start message
-            g.drawString("Player 1", 130, boardHeight / 2 - 40);
+            String startPlayerName = playerNames[0];
+            int textWidth = g.getFontMetrics().stringWidth(startPlayerName + ", get ready!");
+            g.drawString(startPlayerName + ", get ready!", (boardWidth - textWidth) / 2, boardHeight / 2 - 40);
             g.drawString("Round 1/" + numRounds, 110, boardHeight / 2);
             g.drawString("Press SPACE to Start", 40, boardHeight / 2 + 40);
         } else {
             // In-game HUD
             String scoreText = "Score: " + (int) currentTurnScore;
-            String playerText = "P" + currentPlayer + " | R" + currentRound + "/" + numRounds;
+            String playerText = playerNames[currentPlayer - 1] + " | R" + currentRound + "/" + numRounds;
             g.drawString(scoreText, 10, 35);
             g.drawString(playerText, boardWidth - g.getFontMetrics().stringWidth(playerText) - 10, 35);
         }
@@ -196,15 +198,15 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         if (winnerScore >= 0) { // Check >= 0 in case the winning score is 0
             for (int i = 0; i < totalScores.length; i++) {
                 if (totalScores[i] == winnerScore) {
-                    winners.add(i + 1); // Player numbers are 1-based
+                    winners.add(i); // Use 0-based index
                 }
             }
         }
 
         // Display the final scores for each player
         int yPos = 160;
-        for (int i = 0; i < numPlayers; i++) {
-            String scoreLine = "Player " + (i + 1) + ": " + (int) totalScores[i];
+        for (int i = 0; i < playerNames.length; i++) {
+            String scoreLine = playerNames[i] + ": " + (int) totalScores[i];
             g.drawString(scoreLine, 100, yPos);
             yPos += 40;
         }
@@ -213,12 +215,13 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         g.setFont(new Font("Arial", Font.BOLD, 32));
         yPos += 20; // Add some vertical space
         if (winners.size() == 1) {
-            g.drawString("Winner: Player " + winners.get(0) + "!", 80, yPos);
+            String winnerName = playerNames[winners.get(0)];
+            g.drawString("Winner: " + winnerName + "!", 80, yPos);
         } else if (winners.size() > 1) {
             // Build and center the text for a tie
             StringBuilder winnerText = new StringBuilder("Winners: ");
             for (int i = 0; i < winners.size(); i++) {
-                winnerText.append("P").append(winners.get(i));
+                winnerText.append(playerNames[winners.get(i)]);
                 if (i < winners.size() - 1) {
                     winnerText.append(", ");
                 }
@@ -299,7 +302,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
             if (gameOver) {
                 // --- A player's turn ended, transition to the next turn ---
                 currentPlayer++;
-                if (currentPlayer > numPlayers) {
+                if (currentPlayer > playerNames.length) {
                     currentPlayer = 1;
                     currentRound++;
                 }
@@ -347,7 +350,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         velocityY = 0;
         pipes.clear();
 
-        totalScores = new double[numPlayers];
+        totalScores = new double[playerNames.length];
         currentPlayer = 1;
         currentRound = 1;
         currentTurnScore = 0;
