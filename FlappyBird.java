@@ -1,8 +1,11 @@
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Random;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * The FlappyBird class represents the main game panel for the Flappy Bird game.
@@ -63,7 +66,6 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     int gravity = 1;
 
     ArrayList<Pipe> pipes;
-    Random random = new Random();
 
     Timer gameLoop;
     Timer placePipeTimer;
@@ -100,14 +102,14 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         addKeyListener(this);
 
         // Load images
-        backgroundImg = new ImageIcon(getClass().getResource("./flappybirdbg.png")).getImage();
-        birdImg = new ImageIcon(getClass().getResource("./flappybird.png")).getImage();
-        topPipeImg = new ImageIcon(getClass().getResource("./toppipe.png")).getImage();
-        bottomPipeImg = new ImageIcon(getClass().getResource("./bottompipe.png")).getImage();
+        backgroundImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("./flappybirdbg.png"))).getImage();
+        birdImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("./flappybird.png"))).getImage();
+        topPipeImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("./toppipe.png"))).getImage();
+        bottomPipeImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("./bottompipe.png"))).getImage();
 
         // Initialize game objects
         bird = new Bird(birdImg);
-        pipes = new ArrayList<Pipe>();
+        pipes = new ArrayList<>();
 
         // Timers are started by the first key press
         placePipeTimer = new Timer(1500, e -> placePipes());
@@ -115,7 +117,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     }
 
     void placePipes() {
-        int randomPipeY = (int) (pipeY - pipeHeight / 4 - Math.random() * (pipeHeight / 2));
+        int randomPipeY = (int) (pipeY - (double) pipeHeight / 4 - Math.random() * ((double) pipeHeight / 2));
         int openingSpace = boardHeight / 4;
 
         Pipe topPipe = new Pipe(topPipeImg);
@@ -184,24 +186,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         g.drawString("Final Results", 70, 100);
 
         g.setFont(new Font("Arial", Font.PLAIN, 28));
-        double winnerScore = -1;
-        ArrayList<Integer> winners = new ArrayList<>();
-
-        // Find the highest score among all players
-        for (double score : totalScores) {
-            if (score > winnerScore) {
-                winnerScore = score;
-            }
-        }
-
-        // Find all players who achieved the highest score (to handle ties)
-        if (winnerScore >= 0) { // Check >= 0 in case the winning score is 0
-            for (int i = 0; i < totalScores.length; i++) {
-                if (totalScores[i] == winnerScore) {
-                    winners.add(i); // Use 0-based index
-                }
-            }
-        }
+        ArrayList<Integer> winners = getIntegers();
 
         // Display the final scores for each player
         int yPos = 160;
@@ -215,7 +200,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         g.setFont(new Font("Arial", Font.BOLD, 32));
         yPos += 20; // Add some vertical space
         if (winners.size() == 1) {
-            String winnerName = playerNames[winners.get(0)];
+            String winnerName = playerNames[winners.getFirst()];
             g.drawString("Winner: " + winnerName + "!", 80, yPos);
         } else if (winners.size() > 1) {
             // Build and center the text for a tie
@@ -237,6 +222,28 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         g.drawString("Press 'R' to Restart", 80, boardHeight - 100);
     }
 
+    private ArrayList<Integer> getIntegers() {
+        double winnerScore = -1;
+        ArrayList<Integer> winners = new ArrayList<>();
+
+        // Find the highest score among all players
+        for (double score : totalScores) {
+            if (score > winnerScore) {
+                winnerScore = score;
+            }
+        }
+
+        // Find all players who achieved the highest score (to handle ties)
+        if (winnerScore >= 0) { // Check >= 0 in case the winning score is 0
+            for (int i = 0; i < totalScores.length; i++) {
+                if (totalScores[i] == winnerScore) {
+                    winners.add(i); // Use 0-based index
+                }
+            }
+        }
+        return winners;
+    }
+
     public void move() {
         // Bird physics
         velocityY += gravity;
@@ -244,8 +251,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         bird.y = Math.max(bird.y, 0); // Prevent bird from flying off the top of the screen
 
         // Move pipes and check for scoring
-        for (int i = 0; i < pipes.size(); i++) {
-            Pipe pipe = pipes.get(i);
+        for (Pipe pipe : pipes) {
             pipe.x += velocityX;
 
             // Score increases when the bird successfully passes a pair of pipes
