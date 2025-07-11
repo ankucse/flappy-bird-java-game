@@ -1,6 +1,6 @@
 # Flappy Bird Clone in Java
 
-![Flappy Bird Gameplay](https://www.youtube.com/watch?v=fQoJZuBwrkU&t=3s.gif)
+![Flappy Bird Gameplay](https://media.tenor.com/wmVzP2r1dWoAAAAM/rilakkumas-theme-park-adventure-kiiroitori.gif.gif)
 
 A classic Flappy Bird game clone built using Java and the Swing library. The objective is to navigate the bird through the pipes without crashing.
 
